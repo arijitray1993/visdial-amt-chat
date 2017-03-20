@@ -411,9 +411,9 @@
             var instruct = '';
             if(role == 'answer'){
 
-                $( "#worker_role" ).append('<h2 style="color:red">You have to ASK Questions about the image.</h2>');
+                $( "#worker_role" ).append('<h2 style="color:red">You have to ASK Questions about the image to try and figure out which one it is.</h2>');
                 workerRole = 'question';
-                $("#hit_caption").html('Caption: ' + message['caption']);
+                $("#hit_caption").html('We have given the other worker an image in private')//('Caption: ' + message['caption']);
                 $('#hit_caption').attr('style', 'color:blue');
                 $( "#hit_image" ).remove();
 
