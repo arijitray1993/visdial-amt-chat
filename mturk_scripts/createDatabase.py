@@ -85,6 +85,11 @@ class Answer(BaseModel):
     destId = CharField()
     created_at = IntegerField(default=int(datetime.now().strftime('%s')))
 
+class ImageList(BaseModel):
+    id = CharField(primary_key=True)
+    hitId = CharField()
+    image = ForeignKeyField(Image)
+
 def createDatabaseTables():
     database.connect()
 
@@ -100,6 +105,8 @@ def createDatabaseTables():
         database.create_table(Question)
     if not Answer.table_exists():
         database.create_table(Answer)
+    if not ImageList.table_exists():
+        database.create_table(ImageList)
     print "All database tables created."
 
 def fillPilotData():
