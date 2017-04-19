@@ -38,6 +38,7 @@ def getAllAnsHits():
         'answer',
         'approve',
         'answer.image_id',
+        'guess',
         'answer.sequenceId',
         'answer.socketId',
         'answer.sourceId',
@@ -74,6 +75,7 @@ def getAllAnsHits():
         hit.answer.answer,
         hit.approve,
         hit.answer.image.imageId,
+        hit.guess,
         hit.answer.sequenceId,
         hit.answer.socketId,
         hit.answer.sourceId,
@@ -85,8 +87,8 @@ def getAllAnsHits():
         if(count%100 == 0):
             print count
 
-    num_rows = (aHits.shape[0]/13)
-    ans = pd.DataFrame(aHits.values.reshape(num_rows,13))
+    num_rows = (aHits.shape[0]/14)
+    ans = pd.DataFrame(aHits.values.reshape(num_rows,14))
     ans.columns = listOfColumns
     ans.to_csv(ANS_HITS_FILE, encoding='utf-8')
 
@@ -111,6 +113,7 @@ def getAllQuesHits():
         'question',
         'approve',
         'question.image_id',
+        'guess',
         'question.sequenceId',
         'question.socketId',
         'question.sourceId',
@@ -130,6 +133,7 @@ def getAllQuesHits():
         hit.question.question,
         hit.approve,
         hit.question.image.imageId,
+        hit.guess,
         hit.question.sequenceId,
         hit.question.socketId,
         hit.question.sourceId,
@@ -141,8 +145,8 @@ def getAllQuesHits():
         if(count%100 == 0):
             print count
 
-    num_rows = (aHits.shape[0]/12)
-    ans = pd.DataFrame(aHits.values.reshape(num_rows,12))
+    num_rows = (aHits.shape[0]/13)
+    ans = pd.DataFrame(aHits.values.reshape(num_rows,13))
     ans.columns = listOfColumns
     ans.to_csv(QUES_HITS_FILE, encoding='utf-8')
 

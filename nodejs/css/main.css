@@ -1,3 +1,5 @@
+img.selected{border: double green}
+
 html, body{
 height: 1200px;
 overflow-x: hidden;
@@ -43,23 +45,23 @@ overflow-x: hidden;
 }
 
 .me {
-    float: left;   
-    margin: 5px 45px 5px 20px;         
+    float: left;
+    margin: 5px 45px 5px 20px;
 }
 
 .me::before {
     box-shadow: -2px 2px 2px 0 rgba( 178, 178, 178, .4 );
-    left: -9px;           
+    left: -9px;
 }
 
 .you {
-    float: right;    
-    margin: 5px 20px 5px 45px;         
+    float: right;
+    margin: 5px 20px 5px 45px;
 }
 
 .you::before {
     box-shadow: 2px -2px 2px 0 rgba( 178, 178, 178, .4 );
-    right: -9px;    
+    right: -9px;
 }
 
 .nav, .pagination, .carousel, .panel-title a { cursor: pointer; }

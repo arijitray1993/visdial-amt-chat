@@ -24,6 +24,17 @@
         <div class="content">
             <div class="description ui input">
                 <h3>Feedback</h3>
+                <table>
+                  <tr>
+                    <td>Truth:</td>
+                    <td>Guess:</td>
+                  </tr>
+                  <tr>
+                    <td><img class="ui centered image" data-src="holder.js/100x100?text=Waiting%20on%20server%20response." id="truth"></td>
+                    <td><img class="ui centered image" data-src="holder.js/100x100?text=Waiting%20on%20server%20response." id="guess"></td>
+                  </tr>
+
+                </table>
                 <textarea rows="10" cols="50" placeholder="Feedback" id="feedback"></textarea>
             </div>
         </div>
@@ -77,7 +88,7 @@
                     <h2><i class="dropdown icon"></i>Examples</h2>
             </div>
             <div id="example_content" class="content active">
-                <div><img class="ui centered image" src="example_textual.png" ></div> <!--style="width:95%;height: 70%;"-->
+                <div><img class="ui centered image" src="example.png" ></div> <!--style="width:95%;height: 70%;"-->
             </div>
             <!-- <div class="content">
                 <div style="float:left" id="example_blur" class="transition visible">
@@ -118,7 +129,7 @@
 
         <div class="one wide column"></div>
         <div class="fourteen wide centered row">
-            <h2 id ="hit_caption"></h2>
+            <h2 id ="hit_partner"></h2>
         </div>
         <div class="one wide column"></div>
 
@@ -129,6 +140,8 @@
         <div class="one wide column"></div>
         <div class="eight wide column">
             <img class="ui centered image" data-src="holder.js/800x400?text=Hello.%20Image%20will%20appear%20when%20fellow%20Turker%20gets%20connected." id="hit_image">
+            <div id="image_pool">
+            </div>
             <br><br>
 <!--             <div id="answer_scroll" class "four column centered row" style="text-align: center; visibility:hidden">
                     <h3>SCROLL DOWN</h3>
@@ -256,6 +269,7 @@
         console.log( "is_preview:" + is_preview);
 
         var countDownFinished = false;
+        var imageGuessed = false;
         var noOfMsg = 0;
         var noOfMsgPartnerOld = 0;
         var noOfMsgPartnerNew = 0;
@@ -407,26 +421,82 @@
         }
 
         function renderFinalInstructions(role, message){
-            console.log(message['caption']);
             var instruct = '';
             if(role == 'answer'){
 
                 $( "#worker_role" ).append('<h2 style="color:red">You have to ASK Questions about the image to try and figure out which one it is.</h2>');
                 workerRole = 'question';
-                $("#hit_caption").html('We have given the other worker an image in private')//('Caption: ' + message['caption']);
-                $('#hit_caption').attr('style', 'color:blue');
+                $("#hit_partner").html('We have given the other worker an image in private');
+                $('#hit_partner').attr('style', 'color:blue');
                 $( "#hit_image" ).remove();
+                var image_table ='<table cellpadding="0" cellspacing="0" style="width: 100%">'
+                  +'<tr>'
+                    +'<td style="border: 1px solid blue; background-color:#FEE;"><img class="pool" width=100% src="'+message['pool'][0]['img']+'" alt="'+message['pool'][0]['id']+'" /></td>'
+                    +'<td style="border: 1px solid blue; background-color:#FEE;"><img class="pool" width=100% src="'+message['pool'][1]['img']+'" alt="'+message['pool'][1]['id']+'" /></td>'
+                    +'<td style="border: 1px solid blue; background-color:#FEE;"><img class="pool" width=100% src="'+message['pool'][2]['img']+'" alt="'+message['pool'][2]['id']+'" /></td>'
+                    +'<td style="border: 1px solid blue; background-color:#FEE;"><img class="pool" width=100% src="'+message['pool'][3]['img']+'" alt="'+message['pool'][3]['id']+'" /></td>'
+                    +'<td style="border: 1px solid blue; background-color:#FEE;"><img class="pool" width=100% src="'+message['pool'][4]['img']+'" alt="'+message['pool'][4]['id']+'" /></td>'
+                  +'</tr>'
+                  +'<tr>'
+                    +'<td style="border: 1px solid blue; background-color:#FEE;"><img class="pool" width=100% src="'+message['pool'][5]['img']+'" alt="'+message['pool'][5]['id']+'" /></td>'
+                    +'<td style="border: 1px solid blue; background-color:#FEE;"><img class="pool" width=100% src="'+message['pool'][6]['img']+'" alt="'+message['pool'][6]['id']+'" /></td>'
+                    +'<td style="border: 1px solid blue; background-color:#FEE;"><img class="pool" width=100% src="'+message['pool'][7]['img']+'" alt="'+message['pool'][7]['id']+'" /></td>'
+                    +'<td style="border: 1px solid blue; background-color:#FEE;"><img class="pool" width=100% src="'+message['pool'][8]['img']+'" alt="'+message['pool'][8]['id']+'" /></td>'
+                    +'<td style="border: 1px solid blue; background-color:#FEE;"><img class="pool" width=100% src="'+message['pool'][9]['img']+'" alt="'+message['pool'][9]['id']+'" /></td>'
+                  +'</tr>'
+                  +'<tr>'
+                    +'<td style="border: 1px solid blue; background-color:#FEE;"><img class="pool" width=100% src="'+message['pool'][10]['img']+'" alt="'+message['pool'][10]['id']+'" /></td>'
+                    +'<td style="border: 1px solid blue; background-color:#FEE;"><img class="pool" width=100% src="'+message['pool'][11]['img']+'" alt="'+message['pool'][11]['id']+'" /></td>'
+                    +'<td style="border: 1px solid blue; background-color:#FEE;"><img class="pool" width=100% src="'+message['pool'][12]['img']+'" alt="'+message['pool'][12]['id']+'" /></td>'
+                    +'<td style="border: 1px solid blue; background-color:#FEE;"><img class="pool" width=100% src="'+message['pool'][13]['img']+'" alt="'+message['pool'][13]['id']+'" /></td>'
+                    +'<td style="border: 1px solid blue; background-color:#FEE;"><img class="pool" width=100% src="'+message['pool'][14]['img']+'" alt="'+message['pool'][14]['id']+'" /></td>'
+                  +'</tr>'
+                  +'<tr>'
+                    +'<td style="border: 1px solid blue; background-color:#FEE;"><img class="pool" width=100% src="'+message['pool'][15]['img']+'" alt="'+message['pool'][15]['id']+'" /></td>'
+                    +'<td style="border: 1px solid blue; background-color:#FEE;"><img class="pool" width=100% src="'+message['pool'][16]['img']+'" alt="'+message['pool'][16]['id']+'" /></td>'
+                    +'<td style="border: 1px solid blue; background-color:#FEE;"><img class="pool" width=100% src="'+message['pool'][17]['img']+'" alt="'+message['pool'][17]['id']+'" /></td>'
+                    +'<td style="border: 1px solid blue; background-color:#FEE;"><img class="pool" width=100% src="'+message['pool'][18]['img']+'" alt="'+message['pool'][18]['id']+'" /></td>'
+                    +'<td style="border: 1px solid blue; background-color:#FEE;"><img class="pool" width=100% src="'+message['pool'][19]['img']+'" alt="'+message['pool'][19]['id']+'" /></td>'
+                  +'</tr>'
+                +'</table>'
+                +'<script>'
+                  +'$(".pool").click(function() {'
+                    +'console.log("Clicked image.");'
+                    +'$(".pool").each(function(){'
+                      +'$(this).toggleClass("selected", false);'
+                    +'});'
+                    +'$(this).toggleClass("selected");'
+                    +'imageGuessed = true;'
+                    +'$("#finish_hit").prop("disabled", false);'
+                    +'console.log($(this).attr("alt"));'
+                  +'});'
+                +"</script"
+                +">";
+                $("#image_pool").html(image_table);
 
-                instruct = '<div class="title active"><h2><i class=" dropdown icon" style="color:red"></i>' + 'Instructions for the' + ' Questioner</h2></div><div class="content active"><div class="ui ordered list"><span class="item" style="color:red">Given below is a <b>textual description </b> of the image.</span><span class="item"><b>Your objective is to ask questions about the image that help you imagine the scene better.</b></span><span class="item">Your fellow turker will answer these questions for you. They can see the original image.</span></span><span class="item">You are encouraged to enquire about fine grained details of the image, and query about things that have caught your attention.</span><span class="item">You are expected to ask a <b>total of 10 questions.</b></span><span class="item">In case your partner disconnects, continue asking questions about the image till you complete 10 questions.</span><span class="item">You will be allowed to submit the hit once you have finished asking 10 questions.</span><span class="item"><b>You will be paid only if you submit the hit. In case you get disconnected or leave the conversation mid way, no reward will be awarded.</b></span><span class="item"><b>Begin asking questions NOW.</b></span></div></div>';
+                instruct = '<div class="title active"><h2><i class=" dropdown icon" style="color:red"></i>' + 'Instructions for the' + ' Questioner</h2></div><div class="content active">'
+                          +'<div class="ui ordered list">'
+                            +'<span class="item" style="color:red">Given below is a pool of images that contains the image given to your fellow turker.</span>'
+                            +'<span class="item"><b>Your objective is to ask questions about the image that help you figure out which image it is, then guess it by clicking on the image and submitting.</b></span>'
+                            +'<span class="item"><b>At any time, if you are sure you know which image the answerer has, click on it directly in the pool.</b></span>'
+                            +'<span class="item">Your fellow turker will answer these questions for you. They can see the original image.</span></span>'
+                            +'<span class="item">You are encouraged to enquire about fine grained details of the image, and query about things that have caught your attention.</span>'
+                            +'<span class="item">You are expected to ask no more than 10 questions.</span>'
+                            +'<span class="item">In case your partner disconnects, continue asking questions about the image till you complete 10 questions.</span>'
+                            +'<span class="item">You will be allowed to submit the hit once you have finished asking 10 questions, or you make a guess.</span>'
+                            +'<span class="item"><b>You will be paid only if you submit the hit. In case you get disconnected or leave the conversation mid way, no reward will be awarded.</b></span>'
+                            +'<span class="item"><b>You may not be paid if your guess is wrong. Leave feedback if you believe you deserve compensation still, as we will use our discretion.</b></span>'
+                            +'<span class="item"><b>Begin asking questions NOW.</b></span>'
+                          +'</div>'
+                          +'</div>';
             }
             else{
                 workerRole = 'answer';
                 $( "#worker_role" ).append('<h2 style="color:blue">You have to ANSWER questions about the image.</h2>');
-                $("#hit_caption").html('Caption: ' + message['caption']);
-                $('#hit_caption').attr('style', 'color:red');
+                $("#hit_partner").html('We have given the other worker a pool of images that contains this image.');
+                $('#hit_partner').attr('style', 'color:red');
                 document.getElementById("hit_image").src = message['image_url'];
-                console.log(message['caption']);
-                instruct = '<div class="title active"><h2><i class="dropdown icon"></i>' + 'Instructions for the' + ' Answerer</h2></div><div class="content active"><div class="ui ordered list"><span class="item">Your fellow Turker will ask you questions about the image below. They can see only a textual description of the image.</span><span class="item"><b>Your objective is to answer these questions.</b></span><span class="item">The answers needn’t be short and concise. They should resemble responses in a natural conversation and how most people would answer the question.</span><span class="item">You are expected to answer a <b>total of 10 questions.</b></span><span class="item">In case your partner disconnects, please continue by stating facts about the image. Facts are sentences that are descriptive and informative of the image.</span><span class="item">You will be allowed to submit the hit once you have finished sending a total of 10 messages.</span><span class="item"><b>You will be paid only if you submit the hit. In case you get disconnected or leave the conversation mid way, no reward will be awarded.</b> </span></div></div>';
+                instruct = '<div class="title active"><h2><i class="dropdown icon"></i>' + 'Instructions for the' + ' Answerer</h2></div><div class="content active"><div class="ui ordered list"><span class="item">Your fellow Turker will ask you questions about the image below. They can see a bunch of images that share one object in common with the below image.</span><span class="item"><b>Your objective is to answer these questions.</b></span><span class="item">The answers needn’t be short and concise. They should resemble responses in a natural conversation and how most people would answer the question.</span><span class="item">You are expected to answer no more than 10 questions.</span><span class="item">In case your partner disconnects, please continue by stating facts about the image. Facts are sentences that are descriptive and informative of the image.</span><span class="item">You will be allowed to submit the hit once you have finished sending a total of 10 messages, or once a guess is submitted by the questioner.</span><span class="item"><b>You will be paid only if you submit the hit. You may not be paid if your partner\'s guess is wrong. In case you get disconnected or leave the conversation mid way, no reward will be awarded.</b> </span></div></div>';
 
                 // $( "#answer_scroll" ).attr("style", "text-align: center; visibility:visible; margin-top:-20px");
                 // $( "#answer_question_scroll" ).attr("style", "text-align: center; visibility:visible");
@@ -571,10 +641,13 @@
         });
 
         $('#finish_hit').click(function(){
-            if(noOfMsg < 10){
+            if(noOfMsg < 10 && !(imageGuessed)){
                 $('#finish_hit').prop("disabled", true);
             }
             else{
+                if (imageGuessed){
+                  socket.emit('selected guess', {img: $("img.selected").attr("src"), id: $("img.selected").attr("alt")});
+                }
                 $('#feedback-modal')
                 .modal('setting', 'closable', false)
                 .modal({
@@ -586,6 +659,25 @@
                 })
                 .modal('show');
             }
+        });
+
+        socket.on('guess', function(message) {
+            $('#finish_hit').prop("disabled", true);
+            $('#feedback-modal')
+            .modal('setting', 'closable', false)
+            .modal({
+                onApprove : function() {
+                    socket.emit('finish hit', {hitId: hitId, assignmentId: assignmentId, workerId: workerId,
+                    feedback: $('#feedback').val(), selected: message['img']});
+                    $('#mturk_form').submit();
+                }
+            })
+            .modal('show');
+        });
+
+        socket.on('selected', function(message) {
+          document.getElementById("guess").src = message['guess'];
+          document.getElementById("truth").src = message['truth'];
         });
 
         $('#send').click(function(){

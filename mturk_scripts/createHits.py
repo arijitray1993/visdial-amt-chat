@@ -9,7 +9,7 @@ SECRET_KEY = 'AMT_SECRET_KEY' # TODO
 HOST = 'mechanicalturk.amazonaws.com'
 SANDBOX_HOST = 'mechanicalturk.sandbox.amazonaws.com'
 mtc = None
-is_prod = True # TODO
+is_prod = False # TODO
 NUM_HITS = 6000
 
 def getConnection(is_prod = False):
@@ -25,8 +25,8 @@ def getConnection(is_prod = False):
     print mtc.get_account_balance()
     return mtc
 
-url = "https://ENTER_HIT_URL/" # TODO
-title = "Live Q/A about an Image (With Captions)"
+url = "https://ENTER_HIT_URL/v20q_chat" # TODO
+title = "Live Q/A to Determine an Image"
 description = "Ask or Answer questions about an image with a fellow Turker."
 keywords = ["image", "chat", "question", "answer"]
 frame_height = "1200"
@@ -77,9 +77,9 @@ def cancel_hits():
         for j in hits:
             if j.Title == title:
                 try:
-                    print j.HITId
+                    #print j.HITId
                     mtc.expire_hit(j.HITId)
-                    #  mtc.dispose_hit(j.HITId)
+                    mtc.dispose_hit(j.HITId)
                 except MTurkRequestError:
                     print  j.HITId
                     #  assns = mtc.get_assignments(j.HITId)
@@ -104,4 +104,3 @@ def get_results():
 mtc = getConnection(is_prod)
 create_hits(create_new_hit_type(is_prod))
 # cancel_hits()
-

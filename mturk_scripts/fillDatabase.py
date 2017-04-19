@@ -17,12 +17,11 @@ database = MySQLDatabase(config['db_name'], user=config['db_user'], password=con
 # This creates db tables if they don't exist
 createDatabaseTables()
 
-# This populates the 'image' and 'caption' tables with all images from train2014 and one randomly chosen caption per image
+# This populates the 'image' and 'objects' tables with all images from train2014 and every annotated object per image
 # TODO:
 # 1) Create a symbolic link from `static/dataset` to `/path/to/mscoco/images/`
-# 2) Create folder `static/annotations` and download COCO caption files (captions_train2014.json, etc)
-# fillPilotData()
+# 2) Create folder `static/annotations` and download COCO annotation files (instances_train2014.json, etc)
+fillPilotData()
 
-# This pushes 3000 images from the 'image' table with numHitsFinished == 0 to the redis queue 'visdial_queue'
-# createRedisQueue()
-
+# This pushes 5000 images from the 'image' table with numHitsFinished == 0 to the redis queue 'v20q_queue'
+createRedisQueue()

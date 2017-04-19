@@ -161,65 +161,167 @@ io.on('connection', function(socket){
                                                 else {
                                                     foundFlag = true;
                                                     image_url = res;
-                                                    console.log('Before caption')
+
                                                     console.log('Image: ' + res);
 
                                                     //knex.select('image.imageId').from('image').where('image.imageName', '=', res)
-                                                    knex.select('caption.caption', 'image.imageId')
-                                                    .table('caption').innerJoin('image', 'caption.image_id', '=', 'image.imageId')
+                                                    knex.select('objectpool.objectName', 'image.imageId')
+                                                    .table('image').innerJoin('objectpool', 'image.imageId', '=', 'objectpool.image_id')
                                                     .where('image.imageName', '=', res)
+                                                    .limit(1)
                                                     .then(function(cap){
                                                         console.log(cap);
-                                                        // add the first person's HIT details
-                                                        knex('amthits')
-                                                            .insert({
-                                                            id: getUid(),
-                                                            socketId: socket.key,
-                                                            image_id: cap[0]['imageId'],
-                                                            workerId: socket.workerId,
-                                                            assignmentId:  socket.assignmentId,
-                                                            hitId: socket.hitId,
-                                                            approve: 'notApprove',
-                                                            status: 'started',
-                                                            created_at: moment().unix()
-                                                            }).then(function(result){
-                                                                knex('amthits')
-                                                                .insert({   // add the second person's HIT details
-                                                                        id: getUid(),
-                                                                        socketId: activeUsers[userPairId].key,
-                                                                        image_id: cap[0]['imageId'],
-                                                                        workerId: activeUsers[userPairId].workerId,
-                                                                        assignmentId:  activeUsers[userPairId].assignmentId,
-                                                                        hitId: activeUsers[userPairId].hitId,
-                                                                        approve: 'notApprove',
-                                                                        status: 'started',
-                                                                        created_at: moment().unix()
-                                                                    })
-                                                                .then(function(result){
-                                                                    // finally, emit the messages.
-                                                                    activeUsers[userPairId].image_name = image_url;
-                                                                    activeUsers[socket.id].image_name = image_url;
-                                                                    activeUsers[socket.id].push = true;
-                                                                    socket.emit('paired', {
-                                                                        'partnerId' : userPairId,
-                                                                        'key' : socket.id + userPairId,
-                                                                        'image_url': 'train2014/' + image_url,
-                                                                        'role': 'question',
-                                                                        'caption': cap[0]['caption']
-                                                                    });
+                                                        console.log('Create pool of images')
+                                                        knex('imagepool')
+                                                        .where('assignmentId', '=', socket.assignmentId)
+                                                        .del().then(function(){
+                                                          console.log('Insert correct image for first turker')
 
-                                                                    activeUsers[userPairId].emit('paired', {
-                                                                        'partnerId' :socket.id,
-                                                                        'key' : socket.id + userPairId,
-                                                                        'role': 'answer',
-                                                                        'caption': cap[0]['caption']
-                                                                    });
-                                                                    console.log('assignmentId:' + socket.assignmentId);
+                                                          // Select random 19 add to res for the image pool.
+                                                          knex('imagepool')
+                                                          .insert({
+                                                                id: getUid(),
+                                                                assignmentId: socket.assignmentId,
+                                                                image_id: cap[0]['imageId']
+                                                            })
+                                                            .then(function(){
+                                                            console.log('Insert correct image for second turker')
+                                                          knex('imagepool')
+                                                          .insert({
+                                                                  id: getUid(),
+                                                                  assignmentId: activeUsers[userPairId].assignmentId,
+                                                                  image_id: cap[0]['imageId']
+                                                              })
+                                                              .then(function() {
+                                                              console.log('Select the rest of the images')
+                                                                // console.log('Transaction complete.');
+                                                                knex.select('image.imageId', 'objectpool.objectName')
+                                                                .table('objectpool').innerJoin('image', 'objectpool.image_id', '=', 'image.imageId')
+                                                                .where('image.imageSubType', '=', 'train2014')
+                                                                .andWhere('image.imageId', '<>', cap[0]['imageId'])
+                                                                .andWhere('objectpool.objectName', '=', cap[0]['objectName'])
+                                                                .orderByRaw('rand()')
+                                                                .limit(19)
+                                                                .then(function(poolItems){
+                                                                // knex.select('objectName')
+                                                                // .from('objectpool')
+                                                                // .where('image_id', '<>', cap[0]['imageId'])
+                                                                // .andWhere('objectName', '=', cap[0]['objectName'])
+                                                                // .orderByRaw('rand()')
+                                                                // .limit(19)
+                                                                // .then(function(poolItems){
+                                                                  console.log(poolItems.length)
+                                                                  var emitNeeded = true;
+                                                                  poolItems.forEach(function(item){
+                                                                    // console.log(item['imageId'])
+                                                                    knex('imagepool')
+                                                                    .insert({
+                                                                            id: getUid(),
+                                                                            assignmentId: socket.assignmentId,
+                                                                            image_id: item['imageId']
+                                                                        })
+                                                                        .then(function() {
+                                                                          // console.log('Transaction complete.');
+                                                                      knex('imagepool')
+                                                                      .insert({
+                                                                              id: getUid(),
+                                                                              assignmentId: activeUsers[userPairId].assignmentId,
+                                                                              image_id: item['imageId']
+                                                                          })
+                                                                          .then(function() {
+
+                                                                      // I admit to not knowing how to shuffle in javascript
+                                                                      // console.log('Finding pool of image urls')
+                                                                      if (emitNeeded)
+                                                                      {
+                                                                      var pool = [];
+                                                                      knex.select('imagepool.image_id', 'image.imageName')
+                                                                      .table('imagepool').innerJoin('image', 'imagepool.image_id', '=', 'image.imageId')
+                                                                      .where('imagepool.assignmentId', '=', socket.assignmentId)
+                                                                      .orderByRaw('rand()')
+                                                                      .then(function(urls){
+                                                                       urls.forEach(function(item){
+                                                                         //console.log(item['imageName'])
+                                                                         pool.push({id: item['image_id'],
+                                                                                    img: 'train2014/' + item['imageName']});
+                                                                        });
+                                                                      })
+                                                                      .then(function(){
+                                                                        // add the first person's HIT details
+                                                                        if (emitNeeded && pool.length >= 20)
+                                                                        {
+                                                                          emitNeeded = false
+                                                                        knex('amthits')
+                                                                            .insert({
+                                                                            id: getUid(),
+                                                                            socketId: socket.key,
+                                                                            image_id: cap[0]['imageId'],
+                                                                            workerId: socket.workerId,
+                                                                            assignmentId:  socket.assignmentId,
+                                                                            hitId: socket.hitId,
+                                                                            approve: 'notApprove',
+                                                                            status: 'started',
+                                                                            created_at: moment().unix()
+                                                                            }).then(function(result){
+                                                                                knex('amthits')
+                                                                                .insert({   // add the second person's HIT details
+                                                                                        id: getUid(),
+                                                                                        socketId: activeUsers[userPairId].key,
+                                                                                        image_id: cap[0]['imageId'],
+                                                                                        workerId: activeUsers[userPairId].workerId,
+                                                                                        assignmentId:  activeUsers[userPairId].assignmentId,
+                                                                                        hitId: activeUsers[userPairId].hitId,
+                                                                                        approve: 'notApprove',
+                                                                                        status: 'started',
+                                                                                        created_at: moment().unix()
+                                                                                    })
+                                                                                .then(function(result){
+                                                                                    // finally, emit the messages.
+                                                                                    activeUsers[userPairId].image_name = image_url;
+                                                                                    activeUsers[socket.id].image_name = image_url;
+                                                                                    activeUsers[socket.id].push = true;
+                                                                                    socket.emit('paired', {
+                                                                                        'partnerId' : userPairId,
+                                                                                        'key' : socket.id + userPairId,
+                                                                                        'image_url': 'train2014/' + image_url,
+                                                                                        'role': 'question',
+                                                                                        'pool': pool
+                                                                                    });
+
+                                                                                    activeUsers[userPairId].emit('paired', {
+                                                                                        'partnerId' :socket.id,
+                                                                                        'key' : socket.id + userPairId,
+                                                                                        'role': 'answer',
+                                                                                        'pool': pool
+                                                                                    });
+                                                                                    console.log('assignmentId:' + socket.assignmentId);
 
 
+                                                                                });
+                                                                              });
+                                                                            }
+                                                                          });
+                                                                        }
+                                                                          })
+                                                                          .catch(function(err) {
+                                                                            console.error(err);
+                                                                          });
+                                                                        })
+                                                                        .catch(function(err) {
+                                                                          console.error(err);
+                                                                        });
+                                                                  });
                                                                 });
-                                                        });
+                                                              })
+                                                              .catch(function(err) {
+                                                                console.error(err);
+                                                              });
+                                                            })
+                                                            .catch(function(err) {
+                                                              console.error(err);
+                                                            });
 
+                                                      });
                                                     });
                                                 }
                                                 callback();
@@ -410,6 +512,39 @@ io.on('connection', function(socket){
             }
         }
         delete activeUsers[socket.id];
+    });
+
+    socket.on('selected guess', function(msg) {
+        console.log('Guess selected!');
+        console.log(msg['id']);
+        knex.select('image.ImageId').from('image').where('image.imageName', '=', socket.image_name)
+        .then(function(img){
+          knex('amthits').where('image_id', '=', img[0]['ImageId'])
+          .andWhere('assignmentId', '=', socket.assignmentId)
+          .andWhere('hitId','=', socket.hitId)
+          .andWhere('workerId','=', socket.workerId)
+          .andWhere('socketId','=', socket.key)
+          .update({
+              guess: msg['id']
+          })
+          .catch(function(err) {
+            console.error(err);
+          });
+          knex('amthits').where('image_id', '=', img[0]['ImageId'])
+          .andWhere('assignmentId', '=', activeUsers[socket.partnerId].assignmentId)
+          .andWhere('hitId','=', activeUsers[socket.partnerId].hitId)
+          .andWhere('workerId','=', activeUsers[socket.partnerId].workerId)
+          .andWhere('socketId','=', activeUsers[socket.partnerId].key)
+          .update({
+              guess: msg['id']
+          })
+          .catch(function(err) {
+            console.error(err);
+          });
+          socket.emit('selected', {guess: msg['img'], truth: 'train2014/' + socket.image_name})
+          activeUsers[socket.partnerId].emit('selected', {guess: msg['img'], truth: 'train2014/' + socket.image_name})
+        });
+        activeUsers[socket.partnerId].emit('guess', msg);
     });
 
     socket.on("typing", function(message) {

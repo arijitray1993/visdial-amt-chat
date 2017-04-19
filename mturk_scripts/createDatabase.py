@@ -33,11 +33,6 @@ class Image(BaseModel):
     imageSubType = CharField()
     numHitsFinished = CharField()
 
-class Caption(BaseModel):
-    captionId = CharField(primary_key=True, index=True)
-    caption = CharField()
-    image = ForeignKeyField(Image)
-
 class AMTHits(BaseModel):
     id = CharField(primary_key=True)
     socketId = CharField()
@@ -51,7 +46,7 @@ class AMTHits(BaseModel):
     hitIden = CharField()
     comment = CharField()
     image = ForeignKeyField(Image)
-    caption = ForeignKeyField(Caption)
+    guess = IntegerField(default=-1)
     created_at = IntegerField(default=int(datetime.now().strftime('%s')))
     completed_at = IntegerField(default=0)
 
@@ -85,18 +80,22 @@ class Answer(BaseModel):
     destId = CharField()
     created_at = IntegerField(default=int(datetime.now().strftime('%s')))
 
-class ImageList(BaseModel):
+class ImagePool(BaseModel):
     id = CharField(primary_key=True)
-    hitId = CharField()
+    assignmentId = CharField()
     image = ForeignKeyField(Image)
+
+class ObjectPool(BaseModel):
+    id = CharField(primary_key=True)
+    objectName = CharField()
+    image = ForeignKeyField(Image)
+
 
 def createDatabaseTables():
     database.connect()
 
     if not Image.table_exists():
         database.create_table(Image)
-    if not Caption.table_exists():
-        database.create_table(Caption)
     if not AMTHits.table_exists():
         database.create_table(AMTHits)
     if not Feedback.table_exists():
@@ -105,21 +104,23 @@ def createDatabaseTables():
         database.create_table(Question)
     if not Answer.table_exists():
         database.create_table(Answer)
-    if not ImageList.table_exists():
-        database.create_table(ImageList)
+    if not ImagePool.table_exists():
+        database.create_table(ImagePool)
+    if not ObjectPool.table_exists():
+        database.create_table(ObjectPool)
     print "All database tables created."
 
 def fillPilotData():
 
     split = 'train2014' # TODO
-    print 'Loading caption ' + split + ' data...'
+    print 'Loading objects ' + split + ' data...'
 
     cocoPath = '/path/to/visdial-amt-chat/nodejs/static/dataset/' # TODO
-    captionsPath = '/path/to/visdial-amt-chat/nodejs/static/annotations/' # TODO
+    objectsPath = '/path/to/visdial-amt-chat/nodejs/static/annotations/' # TODO
 
-    f1 = open(os.path.join(captionsPath, 'captions_' + split + '.json'))
-    captionData = json.loads(f1.read())
-    f1.close()
+    f = open(os.path.join(objectsPath, 'instances_' + split + '.json'))
+    objectData = json.loads(f.read())
+    f.close()
     imdir='COCO_%s_%012d.jpg'
     subtype = split
 
@@ -150,14 +151,14 @@ def fillPilotData():
 
     print len(new_list)
 
-    caption = defaultdict(list)
-    for cap in captionData['annotations']:
+    obj = defaultdict(list)
+    for cap in objectData['annotations']:
         image_name = imdir%(subtype, cap['image_id'])
-        caption[image_name].append(cap)
+        obj[image_name].append(cap)
 
     imageData = []
     for imname in new_list:
-        imgid = caption[imname][0]['image_id']
+        imgid = obj[imname][0]['image_id']
         imageData.append({'imageId':str(imgid), 'imageName':imname, 'imageType':'mscoco', 'imageSubType':subtype, 'numHitsFinished':'0'})
 
     with database.atomic():
@@ -167,24 +168,36 @@ def fillPilotData():
             e = min(idx+200, len(imageData))
             Image.insert_many(imageData[s:e]).execute()
 
+    objects = {}
+    for idx in objectData['categories']:
+        objects[str(idx['id'])] = idx['name']
+    print objects
+
     c = 0
-    captionData = []
+    objData = []
+    ids = set()
     for imname in new_list:
         c = c+1
-        imgid = caption[imname][0]['image_id']
-        idx = random.randint(0, len(caption[imname])-1)
-        cap = caption[imname][idx] # random select one caption from the database.
-        image = Image.get(Image.imageId == str(imgid))
-        captionData.append({'captionId': cap['id'], 'caption': cap['caption'], 'image': image})
+        try:
+            imgid = obj[imname][0]['image_id']
+            image = Image.get(Image.imageId == str(imgid))
+            for cap in obj[imname]:
+                if cap['id'] not in ids:
+                    objData.append({'id': cap['id'], 'objectName': objects[str(cap['category_id'])], 'image': image})
+                    ids.add(cap['ids'])
+                else:
+                    print("duplicate id " + str())
+        except:
+            pass
 
     with database.atomic():
-        for idx in range(0, len(captionData), 200):
+        for idx in range(0, len(objData), 200):
             print(idx)
             s = idx
-            e = min(idx+200, len(captionData))
-            Caption.insert_many(captionData[s:e]).execute()
+            e = min(idx+200, len(objData))
+            ObjectPool.insert_many(objData[s:e]).execute()
 
-    print "Captions table for " + split + " created."
+    print "Objects table for " + split + " created."
 
 def createRedisQueue():
     print "createRedisQueue called."
@@ -195,13 +208,13 @@ def createRedisQueue():
     with con:
         cur = con.cursor()
         cur.execute("SELECT * FROM image WHERE imageSubType = 'train2014' AND numHitsFinished = 0")
-        r.delete('visdial_queue')
+        r.delete('v20q_queue')
         count = 0
         for i in range(cur.rowcount):
             row = cur.fetchone()
             if(count < 5000): # push 5k images into queue
                 print row[1], row[4]
-                r.rpush('visdial_queue', row[1])
+                r.rpush('v20q_queue', row[1])
                 count += 1
 
         print count

@@ -1,17 +1,17 @@
 var config = {}
 
 config.db = {
-    "user": "visdial",
-    "name": "visdial_chat",
+    "user": "v20q",
+    "name": "v20q",
     "pass": "ENTER_PASSWORD_HERE"
 }
 
 config.redis = {
     "port": 6380,
-    "pass": "ENTER_PASSWORD_HERE",
-    "list": "visdial_queue"
+    "pass": "REDIS_PASSWORD_HERE",
+    "list": "v20q_queue"
 }
 
-config.root = '/path/to/visdial-amt-chat/nodejs/'
+config.root = '/path/to/v20q/nodejs/'
 
 module.exports = config

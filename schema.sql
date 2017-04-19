@@ -16,7 +16,7 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Current Database: `visual_dialog`
+-- Current Database: `v20q`
 --
 
 --  CREATE DATABASE /*!32312 IF NOT EXISTS*/ `visual_dialog` /*!40100 DEFAULT CHARACTER SET latin1 */;
@@ -43,12 +43,10 @@ CREATE TABLE `amthits` (
   `hitIden` varchar(255) NOT NULL,
   `comment` varchar(255) NOT NULL,
   `image_id` varchar(255) NOT NULL,
-  `caption_id` varchar(255) NOT NULL,
   `created_at` int(11) NOT NULL,
   `completed_at` int(11) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `image_id` (`image_id`),
-  KEY `caption_id` (`caption_id`),
   KEY `hitId_index` (`hitId`),
   KEY `workerId_index` (`workerId`),
   KEY `socketId_index` (`socketId`)
@@ -78,22 +76,6 @@ CREATE TABLE `answer` (
   KEY `image_id` (`image_id`),
   KEY `annotationId_id` (`annotationId_id`),
   KEY `socketId_index` (`socketId`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `caption`
---
-
-DROP TABLE IF EXISTS `caption`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `caption` (
-  `captionId` varchar(255) NOT NULL,
-  `caption` varchar(255) NOT NULL,
-  `image_id` varchar(255) NOT NULL,
-  PRIMARY KEY (`captionId`),
-  KEY `image_id` (`image_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -156,6 +138,40 @@ CREATE TABLE `question` (
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+--
+-- Table structure for table `imagepool`
+--
+
+DROP TABLE IF EXISTS `imagepool`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `imagepool` (
+  `id` varchar(255) NOT NULL,
+  `imageId` varchar(255) NOT NULL,
+  `hitId` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `hitId` (`hitId`),
+  KEY `imageId` (`imageId`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `objectpool`
+--
+
+DROP TABLE IF EXISTS `objectpool`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `objectpool` (
+  `id` varchar(255) NOT NULL,
+  `objectName` varchar(255) NOT NULL,
+  `image` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `objectName` (`objectName`),
+  KEY `image` (`image`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;

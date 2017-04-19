@@ -15,7 +15,7 @@ mtc = MTurkConnection(aws_access_key_id=ACCESS_ID,
                       host=HOST)
 
 url = "https://ENTER_HIT_URL/" # TODO
-title = "Live Q/A about an Image (With Captions)"
+title = "Live Q/A to Determine an Image"
 description = "Ask or Answer questions about an image with a fellow Turker."
 keywords = ["image", "chat", "question", "answer"]
 frame_height = "1200"
@@ -27,4 +27,3 @@ QUES_HITS_FILE = 'amthitsQues.csv'
 ANS_HITS_FILE = 'amthitsAns.csv'
 QUES_REJECTS_FILE = 'amthitsReviewRejectQues.csv'
 ANS_REJECTS_FILE = 'amthitsReviewRejectAns.csv'
-

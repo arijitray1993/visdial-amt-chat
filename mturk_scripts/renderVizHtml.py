@@ -20,10 +20,11 @@ cur = con.cursor()
 query = "SELECT amthits.* FROM amthits INNER JOIN (SELECT image_id, count(image_id) AS cnt FROM amthits WHERE status = 'finished' GROUP BY image_id) C ON amthits.image_id = C.image_id WHERE amthits.status = 'finished' AND C.cnt = 2 AND amthits.created_at >= %d;" % FROM_TIMESTAMP
 cur.execute(query)
 
+#TODO: Update for imagepools
 hits = {}
 for i in range(cur.rowcount):
     row = cur.fetchone()
-    hits[row[1]] = {'image_id': row[11], 'caption': '', 'questions': [], 'answers': []}
+    hits[row[1]] = {'image_id': row[11], 'questions': [], 'answers': []}
 
 for i in hits:
     query = "SELECT * FROM question WHERE socketId = '%s' AND sourceId != '' and destId != '' ORDER BY CAST(sequenceId AS UNSIGNED) ASC;" % i
@@ -36,22 +37,17 @@ for i in hits:
     for j in range(min(10, cur.rowcount)):
         row = cur.fetchone()
         hits[i]['answers'].append(row[1])
-    query = "SELECT caption FROM caption WHERE image_id = '%s';" % hits[i]['image_id']
-    cur.execute(query)
-    row = cur.fetchone()
-    hits[i]['caption'] = row[0]
 
 html = '<!DOCTYPE html><html><head><title>VisDial data</title><link rel="stylesheet" type="text/css" href="//computing.ece.vt.edu/~abhshkdz/static/css/bootstrap.min.css"></head><body><div class="container-fluid">'
 html += '<div class="row"><div class="col-lg-12"><h1 style="font-size:2.5em;">VisDial data</h1></div></div>'
 html += '<div class="row"><div class="col-lg-12">%d images. After %s.</div></div>' % (len(hits.keys()), datetime.datetime.fromtimestamp(FROM_TIMESTAMP).strftime('%Y-%m-%d %H:%M:%S'))
 html += '<hr>'
 html += '<div class="row"><div class="col-lg-12"><table class="table table-striped">'
-html += '<thead><tr><th>Image</th><th>Caption</th><th>Questions</th><th>Answers</th></tr></thead>'
+html += '<thead><tr><th>Image</th><th>Questions</th><th>Answers</th></tr></thead>'
 html += '<tbody>'
 for i in hits:
     html += "<tr>"
     html += "<td><img class='img-responsive' src='https://vision.ece.vt.edu/mscoco/images/train2014/COCO_train2014_%012d.jpg'>%s</td>" % (int(hits[i]['image_id']), i)
-    html += "<td>%s</td>" % hits[i]['caption']
     html += "<td><ol>"
     for j in range(min(10, len(hits[i]['questions']))):
         html += "<li>%s</li>" % hits[i]['questions'][j]
