@@ -94,6 +94,24 @@ class ObjectPool(BaseModel):
 def createDatabaseTables():
     database.connect()
 
+    if False:
+        if Image.table_exists():
+            database.drop_table(Image)
+        if Caption.table_exists():
+            database.drop_table(Caption)
+        if AMTHits.table_exists():
+            database.drop_table(AMTHits)
+        if Feedback.table_exists():
+            database.drop_table(Feedback)
+        if Question.table_exists():
+            database.drop_table(Question)
+        if Answer.table_exists():
+            database.drop_table(Answer)
+        if ImagePool.table_exists():
+            database.drop_table(ImagePool)
+        if ObjectPool.table_exists():
+            database.drop_table(ObjectPool)
+
     if not Image.table_exists():
         database.create_table(Image)
     if not AMTHits.table_exists():
@@ -203,7 +221,7 @@ def createRedisQueue():
     print "createRedisQueue called."
 
     import redis
-    r = redis.StrictRedis(host='localhost', port=6380, password='REDIS_PASSWORD_HERE', db=0) # TODO
+    r = redis.StrictRedis(host='localhost', port=6380, password='REDIS_PASSWORD_HERE', db=0) # TODO
 
     with con:
         cur = con.cursor()

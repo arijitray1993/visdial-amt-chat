@@ -44,6 +44,13 @@
         </div>
     </div>
 
+    <div class="ui modal" id="continue">
+        <div class="actions">
+            <div class="ui positive right labeled icon button" id="continue_button">Again<i class="checkmark icon"></i>
+            </div>
+        </div>
+    </div>
+
     <div class="four column centered row" style="text-align: center;">
         <h1>Live Question/Answering about an Image.</h1>
     </div>
@@ -209,15 +216,27 @@
     <script src="url.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.5/socket.io.js"></script>
     <script>
+        function makeid()
+        {
+            var text = "";
+            var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+            for( var i=0; i < 5; i++ )
+                text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+            return text;
+        }
+
         var host = location.origin;
 
         var is_preview = true;
         var is_sandbox = true;
+        var is_amt = true;
         var is_partner_connected = true;
 
-        var assignmentId = undefined;
-        var workerId = undefined;
-        var hitId = undefined;
+        var assignmentId = makeid();
+        var workerId = makeid();
+        var hitId = makeid();
 
         var workerRole = undefined;
 
@@ -262,6 +281,7 @@
                 }
             }
             else {
+                is_amt = false;
                 console.log('assignmentId not present');
             }
         }
@@ -283,11 +303,15 @@
 
         var socket = undefined;
         if(is_preview == true){
+            socket = io.connect(host,{path: '/v20q_chat/socket.io/', transports: ["websocket"]}); // TODO
+            if (is_amt == false) {
+              $('#preview_message').toggle();
+            }
             $('#instructions').attr('class', 'title active');
             $('#instructions_content').attr('class', 'content active');
         }
         if ( is_preview == false) {
-            socket = io.connect(host,{path: '/SUB_FOLDER/socket.io/', transports: ["websocket"]}); // TODO
+            socket = io.connect(host,{path: '/v20q_chat/socket.io/', transports: ["websocket"]}); // TODO
             $('#preview_message').toggle();
             console.log('should toggle');
         }
@@ -484,8 +508,8 @@
                             +'<span class="item">You are expected to ask no more than 10 questions.</span>'
                             +'<span class="item">In case your partner disconnects, continue asking questions about the image till you complete 10 questions.</span>'
                             +'<span class="item">You will be allowed to submit the hit once you have finished asking 10 questions, or you make a guess.</span>'
-                            +'<span class="item"><b>You will be paid only if you submit the hit. In case you get disconnected or leave the conversation mid way, no reward will be awarded.</b></span>'
-                            +'<span class="item"><b>You may not be paid if your guess is wrong. Leave feedback if you believe you deserve compensation still, as we will use our discretion.</b></span>'
+                            +'<span class="item"><b>Your submission will be accepted only if you submit the hit. In case you get disconnected or leave the conversation mid way, your work will be rejected.</b></span>'
+                            +'<span class="item"><b>Your submission may be rejected if your guess is wrong. Leave feedback if you believe your submission is valid, as we will use our discretion.</b></span>'
                             +'<span class="item"><b>Begin asking questions NOW.</b></span>'
                           +'</div>'
                           +'</div>';
@@ -493,10 +517,20 @@
             else{
                 workerRole = 'answer';
                 $( "#worker_role" ).append('<h2 style="color:blue">You have to ANSWER questions about the image.</h2>');
-                $("#hit_partner").html('We have given the other worker a pool of images that contains this image.');
-                $('#hit_partner').attr('style', 'color:red');
+                $("#hit_caption").html('We have given the other worker a pool of images that contains this image.');
+                $('#hit_caption').attr('style', 'color:red');
                 document.getElementById("hit_image").src = message['image_url'];
-                instruct = '<div class="title active"><h2><i class="dropdown icon"></i>' + 'Instructions for the' + ' Answerer</h2></div><div class="content active"><div class="ui ordered list"><span class="item">Your fellow Turker will ask you questions about the image below. They can see a bunch of images that share one object in common with the below image.</span><span class="item"><b>Your objective is to answer these questions.</b></span><span class="item">The answers needn’t be short and concise. They should resemble responses in a natural conversation and how most people would answer the question.</span><span class="item">You are expected to answer no more than 10 questions.</span><span class="item">In case your partner disconnects, please continue by stating facts about the image. Facts are sentences that are descriptive and informative of the image.</span><span class="item">You will be allowed to submit the hit once you have finished sending a total of 10 messages, or once a guess is submitted by the questioner.</span><span class="item"><b>You will be paid only if you submit the hit. You may not be paid if your partner\'s guess is wrong. In case you get disconnected or leave the conversation mid way, no reward will be awarded.</b> </span></div></div>';
+                instruct = '<div class="title active"><h2><i class="dropdown icon"></i>' + 'Instructions for the' + ' Answerer</h2></div><div class="content active">'
+                          +'<div class="ui ordered list">'
+                            +'<span class="item">Your fellow Turker will ask you questions about the image below. They can see a bunch of images that share one object in common with the below image.</span>'
+                            +'<span class="item"><b>Your objective is to answer these questions.</b></span>'
+                            +'<span class="item">The answers needn’t be short and concise. They should resemble responses in a natural conversation and how most people would answer the question.</span>'
+                            +'<span class="item">You are expected to answer no more than 10 questions.</span>'
+                            +'<span class="item">In case your partner disconnects, please continue by stating facts about the image. Facts are sentences that are descriptive and informative of the image.</span>'
+                            +'<span class="item">You will be allowed to submit the hit once you have finished sending a total of 10 messages, or once a guess is submitted by the questioner.</span>'
+                            +'<span class="item"><b>Your submission will be accepted only if you submit the hit. Your submission may be rejected if your partner\'s guess is wrong. In case you get disconnected or leave the conversation mid way, your work will be rejected.</b> </span>'
+                          +'</div>'
+                          +'</div>';
 
                 // $( "#answer_scroll" ).attr("style", "text-align: center; visibility:visible; margin-top:-20px");
                 // $( "#answer_question_scroll" ).attr("style", "text-align: center; visibility:visible");
@@ -654,7 +688,18 @@
                     onApprove : function() {
                         socket.emit('finish hit', {hitId: hitId, assignmentId: assignmentId, workerId: workerId,
                         feedback: $('#feedback').val()});
-                        $('#mturk_form').submit();
+                        if (is_preview) {
+                          $('#feedback-modal').modal('hide');
+                          $('#continue').modal('setting', 'closable', false)
+                          .modal({
+                              onApprove : function() {
+                                  location.reload();
+                              }
+                          })
+                          .modal('show');
+                        } else {
+                          $('#mturk_form').submit();
+                        }
                     }
                 })
                 .modal('show');
@@ -669,7 +714,18 @@
                 onApprove : function() {
                     socket.emit('finish hit', {hitId: hitId, assignmentId: assignmentId, workerId: workerId,
                     feedback: $('#feedback').val(), selected: message['img']});
-                    $('#mturk_form').submit();
+                    if (is_preview) {
+                      $('#feedback-modal').modal('hide');
+                      $('#continue').modal('setting', 'closable', false)
+                      .modal({
+                          onApprove : function() {
+                              location.reload();
+                          }
+                      })
+                      .modal('show');
+                    } else {
+                      $('#mturk_form').submit();
+                    }
                 }
             })
             .modal('show');

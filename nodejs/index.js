@@ -34,6 +34,7 @@ var io = require('socket.io')(http);
 
 var activeUsers = {};
 var numUsers = 0;
+var dummyId = 0;
 
 var userQueue = [];
 app.use(express.static('semanticui'));
@@ -66,11 +67,19 @@ io.on('connection', function(socket){
 
         // we store the username in the socket session for this client
         // socket.username = msg['personName'];
-        socket.workerId = msg['workerId'];
+        console.log(msg['workerId'] === undefined);
+        if (msg['workerId'] === undefined) {
+          socket.workerId = dummyId.toString();
+          dummyId = dummyId + 1;
+          socket.assignmentId = socket.workerId;
+          socket.hitId = socket.workerId;
+        } else {
+          socket.workerId = msg['workerId'];
+          socket.assignmentId = msg['assignmentId'];
+          socket.hitId = msg['hitId'];
+        }
         socket.partnerId = '';
         socket.role = '';
-        socket.assignmentId = msg['assignmentId'];
-        socket.hitId = msg['hitId'];
 
         console.log('WorkerId: ' + socket.workerId);
         console.log('AssignmentId: ' +  socket.assignmentId);
@@ -197,9 +206,16 @@ io.on('connection', function(socket){
                                                                 // console.log('Transaction complete.');
                                                                 knex.select('image.imageId', 'objectpool.objectName')
                                                                 .table('objectpool').innerJoin('image', 'objectpool.image_id', '=', 'image.imageId')
-                                                                .where('image.imageSubType', '=', 'train2014')
-                                                                .andWhere('image.imageId', '<>', cap[0]['imageId'])
-                                                                .andWhere('objectpool.objectName', '=', cap[0]['objectName'])
+                                                                .where(function(){
+                                                                  if (Math.random() >= 0.5) {
+                                                                    this.where('image.imageSubType', '=', 'train2014')
+                                                                    .andWhere('image.imageId', '<>', cap[0]['imageId'])
+                                                                    .andWhere('objectpool.objectName', '=', cap[0]['objectName'])
+                                                                  } else {
+                                                                    this.where('image.imageSubType', '=', 'train2014')
+                                                                    .andWhere('image.imageId', '<>', cap[0]['imageId'])
+                                                                  }
+                                                                })
                                                                 .orderByRaw('rand()')
                                                                 .limit(19)
                                                                 .then(function(poolItems){
