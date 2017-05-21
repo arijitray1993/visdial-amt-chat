@@ -1,0 +1,9 @@
+MySQL-python
+pillow
+peewee
+shortuuid
+numpy
+boto
+redis
+flask
+flask-socketio
